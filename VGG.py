@@ -8,9 +8,8 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets
-from torchvision.transforms import ToTensor
+from torchvision.transforms import ToTensor, Compose
 import torch.nn.functional as F
-import torchvision.transforms
 
 
 import ssl
@@ -19,9 +18,9 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 
 # Transforms the image and scales it ().
-image_transforms = torchvision.transforms.Compose(
+image_transforms = Compose(
     [
-        torchvision.transforms.ToTensor(),
+        ToTensor(),
         # Add any other transformations here (e.g., transforms.Normalize(mean, std))
     ]
 )
@@ -61,6 +60,15 @@ class CIFAR10Model(nn.Module):  # It inherits from Module
         self.conv1 = nn.Conv2d(3, 32, kernel_size=(3, 3), stride=1, padding=1)
         self.act1 = nn.ReLU()
 
+    def forward(self, x):
+        """
+        Forward pass of the network.
+        Y are the one-hot encoded labels.
+        """
+        x = self.conv1(x)
+        x = self.act1(x)
+        return x
+
 
 def train(dataloader, model, loss_fn, optimizer, device):
     """
@@ -70,17 +78,17 @@ def train(dataloader, model, loss_fn, optimizer, device):
 
     size = len(dataloader.dataset)
     model.train()
-    for batch, (X, y) in enumerate(dataloader):
-        X, y = X.to(device), y.to(device)
+    for batch, (X, Y) in enumerate(dataloader):
+        X, Y = X.to(device), Y.to(device)
 
         # compute prediction error
         pred = model(X)
-        loss = loss_fn(pred, y)
+        loss = loss_fn(pred, Y)
 
         # Backprop
+        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        optimizer.zero_grad()
 
         if batch % 100 == 0:
             loss, current = loss.item(), (batch + 1) * len(X)
@@ -99,11 +107,11 @@ def test(dataloader, model, loss_fn, device):
     test_loss, correct = 0, 0
     # hmm, what is no_grad
     with torch.no_grad():
-        for X, y in dataloader:
-            X, y = X.to(device), y.to(device)
+        for X, Y in dataloader:
+            X, Y = X.to(device), Y.to(device)
             pred = model(X)
-            test_loss += loss_fn(pred, y).item()
-            correct += (pred.argmax(1) == 1).type(torch.float).sum().item()
+            test_loss += loss_fn(pred, Y).item()
+            correct += (pred.argmax(1) == Y.argmax(1)).type(torch.float).sum().item()
     test_loss /= num_batches
     correct /= size
     print(
@@ -128,9 +136,9 @@ if __name__ == "__main__":
     # for images, labels in train_dataloader:
     #   the images  will then eb
 
-    for X, y in test_dataloader:
+    for X, Y in test_dataloader:
         print(f"Shape of X [N, C, H, W]: {X.shape}")
-        print(f"Shape of y: {y.shape} {y.dtype}")
+        print(f"Shape of Y: {Y.shape} {Y.dtype}")
         break
 
     # setting the device
@@ -148,7 +156,7 @@ if __name__ == "__main__":
     # Now lets define a loss and an optimizer
     loss_fn = nn.CrossEntropyLoss()
     # standard optimizer with ordinary optimizer.
-    optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.SGD(model.parameters(), lr=1e-2)
 
     # Doing training over several epochs should be done.
     epochs = 5
