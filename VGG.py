@@ -1,4 +1,3 @@
-
 """
 Building a basic classifier 
 
@@ -10,7 +9,7 @@ from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets
 from torchvision.transforms import ToTensor
-
+import torch.nn.functional as F
 import torchvision.transforms
 
 
@@ -43,41 +42,6 @@ class CIFAR10Custom(Dataset):
         y_one_hot = encode_one_hot(y, self.num_classes)
         return x, y_one_hot
 
-# Example usage
-train_dataset = CIFAR10Custom(train=True)
-test_dataset  = CIFAR10Custom(train=False)
-
-
-# Defining batc size
-batch_size = 32
-
-# Create data loaders. Shuffle the data
-# We would need to create a custom collate function for one-hot encoding. 
-train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle = True)
-test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle = False)
-
-
-
-# in the datta loader can we then just dor 
-# for images, labels in train_dataloader:
-#   the images  will then eb 
-
-for X, y in test_dataloader:
-    print(f"Shape of X [N, C, H, W]: {X.shape}")
-    print(f"Shape of y: {y.shape} {y.dtype}")
-    break
-
-# setting the device
-device= (
-    "cuda"
-    if torch.cuda.is_available()
-    else "mps"
-    if torch.backends.mps.is_available()
-    else "cpu"
-)
-
-print(f"using {device} device")
-
 
 
 """
@@ -88,8 +52,43 @@ class CIFAR10Model(nn.Module): # It inherits from Module
     def __init__(self): 
         super().__init__()
         # Start of with a convolutional layer followed by a rely and some dropout
-        self.conv1 = nn.conv2d(3, 32, kernel_size=(3,3), stride = 1, padding = 1)
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=(3,3), stride = 1, padding = 1)
         self.act1 = nn.ReLU()
         # a bit of dropout.
         
         
+if __name__=="__main__":
+    # Example usage
+    train_dataset = CIFAR10Custom(train=True)
+    test_dataset  = CIFAR10Custom(train=False)
+
+
+    # Defining batc size
+    batch_size = 32
+
+    # Create data loaders. Shuffle the data
+    # We would need to create a custom collate function for one-hot encoding. 
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle = True)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle = False)
+
+
+
+    # in the datta loader can we then just dor 
+    # for images, labels in train_dataloader:
+    #   the images  will then eb 
+
+    for X, y in test_dataloader:
+        print(f"Shape of X [N, C, H, W]: {X.shape}")
+        print(f"Shape of y: {y.shape} {y.dtype}")
+        break
+
+    # setting the device
+    device= (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps"
+        if torch.backends.mps.is_available()
+        else "cpu"
+    )
+
+    print(f"using {device} device")
