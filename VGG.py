@@ -54,7 +54,8 @@ class CIFAR10Model(nn.Module): # It inherits from Module
         # Start of with a convolutional layer followed by a rely and some dropout
         self.conv1 = nn.Conv2d(3, 32, kernel_size=(3,3), stride = 1, padding = 1)
         self.act1 = nn.ReLU()
-        # a bit of dropout.
+        
+
         
         
 if __name__=="__main__":
@@ -92,3 +93,74 @@ if __name__=="__main__":
     )
 
     print(f"using {device} device")
+
+
+    
+        
+model = CIFAR10Model().to(device)
+print(model)
+
+
+"""
+Now lets define a loss and an optimizer
+"""
+loss_fn = nn.CrossEntropyLoss()
+# standard optimizer with ordinary optimizer.
+optimizer = torch.optim.SGD(model.parameters(), lr = 1e-3)
+
+
+"""
+Function for training. 
+What to consider. 
+"""
+def train(dataloader, model, loss_fn, optimizer): 
+    size = len(dataloader.dataset)
+    model.train()
+    for batch, (X,y) in enumerate(dataloader):
+        X, y = X.to(device), y.to(device)
+
+        #compute prediction error
+        pred = model(X)
+        loss = loss_fn(pred,y)
+
+        # Backprop
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+
+        if batch % 100 == 0:
+            loss, current = loss.item(), (batch + 1) * len(X)
+            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+
+"""
+Check the performance aginst the test dataset.s
+"""
+def test(dataloader, model, loss_fn):
+    size = len(dataloader.dataset)
+    # hmmm. Hur fungerar detta
+    num_batches = len(dataloader)
+    model.eval()
+    test_loss, correct = 0, 0
+    # hmm, what is no_grad
+    with torch.no_grad():
+        for X,y in dataloader: 
+            X, y = X.to(device), y.to(device)
+            pred = model(X)
+            test_loss += loss_fn(pred, y).item()
+            correct += (pred.argmax(1) == 1).type(torch.float).sum().item()
+    test_loss /= num_batches
+    correct /= size
+    print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+
+
+"""
+Doing training over several epochs should be done. 
+"""
+    
+epochs = 5
+for t in range(epochs):
+    print(f"Epoch {t+1}\n-------------------------------")
+    # now do the stages of the training
+    train(train_dataloader, model, loss_fn, optimizer)
+    test(test_dataloader, model, loss_fn)
+print("Done")
