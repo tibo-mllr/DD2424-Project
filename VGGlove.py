@@ -22,6 +22,8 @@ ssl._create_default_https_context = ssl._create_unverified_context
 image_transforms = torchvision.transforms.Compose(
     [
         torchvision.transforms.ToTensor(),
+        #torchvision.transforms.RandomHorizontalFlip(p=0.5),
+        #torchvision.transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),
         # Add any other transformations here (e.g., transforms.Normalize(mean, std))
     ]
 )
