@@ -91,21 +91,6 @@ def get_args():
         help="apply transformations to the data",
     )
     parser.add_argument(
-        "-s",
-        "--scheduler",
-        default="none",
-        type=str,
-        choices=["cosine", "step", "compose", "none"],
-        metavar="",
-        help="scheduler to use; options: [cosine, step, compose, none] (default: none)",
-    )
-    parser.add_argument(
-        "-t",
-        "--transform",
-        action="store_true",
-        help="apply transformations to the data",
-    )
-    parser.add_argument(
         "-w",
         "--warmup-steps",
         default=5,
