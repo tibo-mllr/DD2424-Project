@@ -46,12 +46,19 @@ class CIFAR10Custom(Dataset):
     def encode_one_hot(label, num_classes):
         return F.one_hot(torch.tensor(label), num_classes=num_classes).float()
 
-    def __init__(self, train=False, num_classes=10):
+    def __init__(self, train=False, num_classes=10, normalize=False, transform=False):
+        if normalize:
+            transformer = CIFAR10Custom.normalized_transform
+        elif transform:
+            transformer = CIFAR10Custom.image_transforms
+        else:
+            transformer = CIFAR10Custom.validation_transforms
+
         self.dataset = datasets.CIFAR10(
             root="./data",
             train=train,
             download=True,
-            transform=self.validation_transforms,
+            transform=transformer,
         )
 
         self.num_classes = num_classes

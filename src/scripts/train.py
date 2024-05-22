@@ -1,7 +1,16 @@
 import torch
 
 
-def main(dataloader, model, loss_fn, optimizer, device, scheduler=None):
+def main(
+    dataloader,
+    model,
+    loss_fn,
+    optimizer,
+    device,
+    num_epoch,
+    scheduler=None,
+    chosen_scheduler=None,
+):
     """
     Function for training
     """
@@ -25,6 +34,11 @@ def main(dataloader, model, loss_fn, optimizer, device, scheduler=None):
         loss.backward()
         optimizer.step()
 
+        if scheduler and (
+            chosen_scheduler == "cosine" or chosen_scheduler == "compose"
+        ):
+            scheduler.step(num_epoch + batch / len(dataloader))
+
         # Update the loss
         train_loss += loss.item()
         correct += (pred.argmax(1) == Y.argmax(1)).type(torch.float).sum().item()
@@ -38,4 +52,4 @@ def main(dataloader, model, loss_fn, optimizer, device, scheduler=None):
     # Here we do not really care how we divied it into batches
     train_acc = 100 * (correct / size)
 
-    return train_acc, train_loss, scheduler
+    return train_acc, train_loss

@@ -2,9 +2,9 @@ from torch.utils.data import DataLoader
 from ..datasets import CIFAR10Custom
 
 
-def main(batch_size=64):
-    train_dataset = CIFAR10Custom(train=True)
-    test_dataset = CIFAR10Custom(train=False)
+def main(batch_size=64, normalize=False, transform=False):
+    train_dataset = CIFAR10Custom(train=True, normalize=normalize, transform=transform)
+    test_dataset = CIFAR10Custom(train=False, normalize=normalize, transform=False)
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
