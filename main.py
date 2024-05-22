@@ -69,7 +69,7 @@ def get_args():
     parser.add_argument(
         "-o",
         "--optimizer",
-        default="SGD",
+        default="sgd",
         type=str,
         choices=["sgd", "decay", "adam", "qdamW"],
         metavar="",
@@ -171,7 +171,7 @@ def main(
         # AdamW is adam with weight decay. Can experiment with the weight.
         optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.001)
     else:
-        raise ValueError("Unknown optimizer")
+        raise ValueError(f"Unknown optimizer, {chosen_optimizer}")
 
     # Task 8 with differnt learning rate schedulers. I guess we can try all of the tree mentioned.
     # Warm up = very small learning rate intially that then increases fast .
@@ -195,7 +195,7 @@ def main(
     elif chosen_scheduler == "none":
         scheduler = None
     else:
-        raise ValueError("Unknown scheduler")
+        raise ValueError(f"Unknown scheduler, {chosen_scheduler}")
 
     # Could make a final task with adam, all of the regularization and the whole shabang over 400+ epochs and see if we can get 90+% accuracy. Is certainty within the realm of possibility.
 
