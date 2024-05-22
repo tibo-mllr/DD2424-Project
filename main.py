@@ -71,9 +71,24 @@ def get_args():
         "--optimizer",
         default="SGD",
         type=str,
-        choices=["SGD", "Adam", "AdamW"],
+        choices=["sgd", "decay", "adam", "qdamW"],
         metavar="",
-        help="optimizer to use; options: [SGD, Adam, AdamW] (default: SGD)",
+        help="optimizer to use; options: [sgd, decay, adam, adamW] (default: sgd)",
+    )
+    parser.add_argument(
+        "-s",
+        "--scheduler",
+        default="none",
+        type=str,
+        choices=["cosine", "step", "compose", "none"],
+        metavar="",
+        help="scheduler to use; options: [cosine, step, compose, none] (default: none)",
+    )
+    parser.add_argument(
+        "-t",
+        "--transform",
+        action="store_true",
+        help="apply transformations to the data",
     )
     parser.add_argument(
         "-s",
@@ -158,13 +173,16 @@ def main(
 
     # Define a loss and an optimizer
     loss_fn = nn.CrossEntropyLoss()
-    if chosen_optimizer == "SGD":
+    if chosen_optimizer == "sgd":
         optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9)
-        # If we want to use L2 normalization is the following step used.
-        #  optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay= 0.001)
-    elif chosen_optimizer == "Adam":
+    elif chosen_optimizer == "decay":
+        # Decay is the same as SGD with L2 normalization
+        optimizer = torch.optim.SGD(
+            model.parameters(), lr=lr, momentum=0.9, weight_decay=0.001
+        )
+    elif chosen_optimizer == "adam":
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    elif chosen_optimizer == "AdamW":
+    elif chosen_optimizer == "adamW":
         # AdamW is adam with weight decay. Can experiment with the weight.
         optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.001)
     else:
