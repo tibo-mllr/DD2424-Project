@@ -1,2 +1,2 @@
 from .graphic import plot_graphs
-from .scheduler import WarmUpScheduler
+from .scheduler import WarmUpScheduler, WarmUpCosineAnnealingScheduler

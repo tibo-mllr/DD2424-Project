@@ -1,4 +1,12 @@
+import matplotlib.pyplot as plt
+import torch
+import math
+
 import torch.optim.lr_scheduler as lr_scheduler
+
+
+
+
 
 
 class WarmUpScheduler(lr_scheduler._LRScheduler):
@@ -66,4 +74,39 @@ class WarmUpCosineAnnealingScheduler:
         return self.get_lr()
     
 
-  
+    
+# Define the optimizer and schedulers as before
+model = torch.nn.Linear(10, 1)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+total_epochs = 100
+warmup_epochs = 10
+batch_size = 32
+dataset_size = 50000  # Adjust to the size of your dataset
+
+total_steps = total_epochs * (dataset_size // batch_size)
+warmup_steps = warmup_epochs * (dataset_size // batch_size)
+print(warmup_steps)
+initial_lr = 0.1
+min_lr = 1e-5
+
+# Initialize the combined scheduler
+scheduler = WarmUpCosineAnnealingScheduler(optimizer, warmup_steps, total_steps, initial_lr, min_lr)
+
+# Track the learning rate for each step
+learning_rates = []
+
+for epoch in range(total_epochs):
+    for batch in range(dataset_size // batch_size):
+        scheduler.step()
+        learning_rates.append(scheduler.get_last_lr()[0])
+
+# Plot the learning rate schedule
+plt.figure(figsize=(10, 5))
+plt.plot(learning_rates)
+plt.xlabel('Iteration')
+plt.ylabel('Learning Rate')
+plt.title('Warm-Up + Cosine Annealing Learning Rate Schedule')
+plt.axvline(x=warmup_steps, color='r', linestyle='--', label='End of Warm-Up')
+plt.legend()
+plt.grid(True)
+plt.show()

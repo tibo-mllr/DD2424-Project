@@ -35,10 +35,15 @@ def main(
         optimizer.step()
 
         if scheduler and (
-            chosen_scheduler == "cosine" or chosen_scheduler == "compose"
-        ):
+            chosen_scheduler == "cosine"
+        ):  
             scheduler.step(num_epoch + batch / len(dataloader))
-
+        if scheduler and (
+            chosen_scheduler == "compose"
+        ):                          # datasetsize / batchsize.
+            scheduler.step()
+    #    for param_group in optimizer.param_groups:
+    #        print(f'Epoch {num_epoch}, Batch {batch}, LR: {param_group["lr"]}')
         # Update the loss
         train_loss += loss.item()
         correct += (pred.argmax(1) == Y.argmax(1)).type(torch.float).sum().item()

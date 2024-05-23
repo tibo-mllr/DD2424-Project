@@ -15,8 +15,13 @@ from src.models import (
     BatchDropoutModel,
     DropoutBatchModel,
     CompleteModel,
+    resVGG,
+    Batchmodel, 
+    LayerNormModel, 
+    GroupNormModel, 
+    InstanceNormModel
 )
-from src.utils import WarmUpScheduler, plot_graphs
+from src.utils import WarmUpScheduler,WarmUpCosineAnnealingScheduler,  plot_graphs
 
 
 def get_args():
@@ -56,9 +61,14 @@ def get_args():
             "batch-dropout",
             "dropout-batch",
             "complete",
+            "resVGG", 
+            "batchModel",
+            "layerNormModel",
+            "groupNormModel",
+            "InstanceNormModel"
         ],
         metavar="",
-        help="model to use; options: [baseline, baseline-dropout, batch-dropout, dropout-batch, complete] (default: baseline)",
+        help="model to use; options: [baseline, baseline-dropout, batch-dropout, dropout-batch, complete, resVGG] (default: baseline)",
     )
     parser.add_argument(
         "-n",
@@ -71,7 +81,7 @@ def get_args():
         "--optimizer",
         default="sgd",
         type=str,
-        choices=["sgd", "decay", "adam", "qdamW"],
+        choices=["sgd", "decay", "adam", "adamW"],
         metavar="",
         help="optimizer to use; options: [sgd, decay, adam, adamW] (default: sgd)",
     )
@@ -153,6 +163,11 @@ def main(
         "batch-dropout": BatchDropoutModel,
         "dropout-batch": DropoutBatchModel,
         "complete": CompleteModel,
+        "resVGG": resVGG,
+        "batchModel": Batchmodel,
+        "layerNormModel": LayerNormModel,
+        "groupNormModel": GroupNormModel,
+        "InstanceNormModel": InstanceNormModel
     }
     model = models[chosen_model]().to(device)
 
@@ -175,17 +190,28 @@ def main(
 
     # Task 8 with differnt learning rate schedulers. I guess we can try all of the tree mentioned.
     # Warm up = very small learning rate intially that then increases fast .
-    if chosen_optimizer == "compose":
+    if chosen_scheduler == "compose":
         # Learning rate warmup + cosine anealing can be combined
-        warmup_scheduler = WarmUpScheduler(optimizer, warmup_steps, initial_lr=lr)
-        cosine_scheduler = lr_scheduler.CosineAnnealingLR(
-            optimizer, T_max=epochs - warmup_steps
-        )
-        scheduler = lr_scheduler.SequentialLR(
-            optimizer,
-            schedulers=[warmup_scheduler, cosine_scheduler],
-            milestones=[warmup_steps],
-        )
+     #   warmup_scheduler = WarmUpScheduler(optimizer, warmup_steps, initial_lr=lr)
+   #     cosine_scheduler = lr_scheduler.CosineAnnealingLR(
+   #         optimizer, T_max=epochs - warmup_steps
+   #     )
+   #     scheduler = lr_scheduler.SequentialLR(
+   #         optimizer,
+   #         schedulers=[warmup_scheduler, cosine_scheduler],
+   #         milestones=[warmup_steps],
+   #     )
+        dataset_size = 5000
+        total_epochs = 100
+        warmup_epochs = 5
+        total_steps = total_epochs * len(train_dataloader)
+        warmup_steps = warmup_epochs * len(train_dataloader)
+        initial_lr = 0.01
+        print(warmup_steps)
+        min_lr = 1e-5
+        scheduler = WarmUpCosineAnnealingScheduler(optimizer, warmup_steps, total_steps, initial_lr, min_lr)
+
+
     elif chosen_scheduler == "cosine":
         scheduler = lr_scheduler.CosineAnnealingWarmRestarts(
             optimizer, T_0=10, T_mult=1, eta_min=0.001
@@ -233,9 +259,11 @@ def main(
         trainLoss.append(train_Loss)
 
         # Part of task 8 when useing the step learning rate or cosince scheduler with warmup since it is updated per batch.
-        if scheduler:
+        if scheduler and (chosen_scheduler == 'step'):
             scheduler.step()
-            print(f"Epoch {t+1}, LR: {scheduler.get_last_lr()[0]}")
+            
+        if scheduler: 
+             print(f"Learning Rate: {scheduler.get_last_lr()[0]}")
 
     print("Done")
 
